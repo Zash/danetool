@@ -146,6 +146,9 @@ sock = ssl.wrap(sock, {
 });
 repeat until sock:dohandshake();
 
+print("Name:", name);
+print("Target:", target);
+print("Port:", port);
 
 local cert = sock:getpeercertificate();
 print(cert:pem())
