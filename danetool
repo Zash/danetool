@@ -155,7 +155,7 @@ print();
 for i = 1, reply.n do
 	local tlsa = parse_TLSA(reply[i]);
 	print(tlsa)
-	if use == 1 or use == 3 then
+	if tlsa.use == 1 or tlsa.use == 3 then
 		print(one_dane_check(tlsa, cert) and "Matches!" or "No match");
 	else
 		print("TODO CA-based usage");
