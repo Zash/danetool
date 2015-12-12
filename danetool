@@ -12,7 +12,7 @@ local get_startts = {
 		return starttls_blobs.xmpp:gsub("$%w+", {
 			type = "client", from = "", to = name;
 		});
-	end
+	end;
 	["xmpp-server"] = function (name)
 		return starttls_blobs.xmpp:gsub("$%w+", {
 			type = "server", from = "example.com", to = name;
@@ -44,7 +44,11 @@ for i, arg in ipairs(arg) do
 		-- Now what?
 	end
 end
-sock = ssl.wrap(sock); -- TODO 
+sock = ssl.wrap(sock, {
+	mode = "client",
+	protocol = "tlsv1_2",
+});
 repeat until sock:dohandshake();
 
-print(sock:getpercertificate():pem())
+local cert = sock:getpeercertificate();
+print(cert:pem())
