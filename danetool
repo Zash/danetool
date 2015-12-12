@@ -4,7 +4,7 @@ local socket = require "socket";
 local ssl = require "ssl";
 local unbound = require "lunbound";
 
-local crypto = require "luacrypto";
+local crypto = require "crypto";
 
 local hashes = {};
 function hashes.sha256(data, hex)
