@@ -36,33 +36,33 @@ local tlsa_mt = {};
 
 -- from luaunbound util.dns
 local function parse_TLSA(packet)
-  local use, select, match = packet:byte(1,3);
-  return setmetatable({
-    use = use;
-    select = select;
-    match = match;
-    data = packet:sub(4);
-  }, tlsa_mt);
+	local use, select, match = packet:byte(1,3);
+	return setmetatable({
+		use = use;
+		select = select;
+		match = match;
+		data = packet:sub(4);
+	}, tlsa_mt);
 end
 
 -- Acronyms from RFC 7218
 local tlsa_usages = {
-  [0] = "PKIX-CA",
-  [1] = "PKIX-EE",
-  [2] = "DANE-TA",
-  [3] = "DANE-EE",
-  [255] = "PrivCert",
+	[0] = "PKIX-CA",
+	[1] = "PKIX-EE",
+	[2] = "DANE-TA",
+	[3] = "DANE-EE",
+	[255] = "PrivCert",
 };
 local tlsa_selectors = {
-  [0] = "Cert",
-  [1] = "SPKI",
-  [255] = "PrivSel",
+	[0] = "Cert",
+	[1] = "SPKI",
+	[255] = "PrivSel",
 };
 local tlsa_match_types = {
-  [0] = "Full",
-  [1] = "SHA2-256",
-  [2] = "SHA2-512",
-  [255] = "PrivMatch",
+	[0] = "Full",
+	[1] = "SHA2-256",
+	[2] = "SHA2-512",
+	[255] = "PrivMatch",
 };
 
 function tlsa_mt:__tostring()
@@ -75,43 +75,43 @@ end
 
 -- from mod_s2s_auth_dane
 local function one_dane_check(tlsa, cert)
-  local select, match, certdata = tlsa.select, tlsa.match;
+	local select, match, certdata = tlsa.select, tlsa.match;
 
-  if select == 0 then
-    certdata = pem2der(cert:pem());
-  elseif select == 1 and cert.pubkey then
-    certdata = pem2der(cert:pubkey());
-  else
-    return nil, "select";
-  end
+	if select == 0 then
+		certdata = pem2der(cert:pem());
+	elseif select == 1 and cert.pubkey then
+		certdata = pem2der(cert:pubkey());
+	else
+		return nil, "select";
+	end
 
-  if match == 1 then
-    certdata = hashes.sha256(certdata);
-  elseif match == 2 then
-    certdata = hashes.sha512(certdata);
-  elseif match ~= 0 then
+	if match == 1 then
+		certdata = hashes.sha256(certdata);
+	elseif match == 2 then
+		certdata = hashes.sha512(certdata);
+	elseif match ~= 0 then
 		return nil, "match";
-  end
-  return certdata == tlsa.data;
+	end
+	return certdata == tlsa.data;
 end
 
 local function cert2tlsa(cert, select, match)
 	local certdata;
-  if select == 0 then
-    certdata = pem2der(cert:pem());
-  elseif select == 1 and cert.pubkey then
-    certdata = pem2der(cert:pubkey());
-  else
-    return nil, "select";
-  end
+	if select == 0 then
+		certdata = pem2der(cert:pem());
+	elseif select == 1 and cert.pubkey then
+		certdata = pem2der(cert:pubkey());
+	else
+		return nil, "select";
+	end
 
-  if match == 1 then
-    certdata = hashes.sha256(certdata);
-  elseif match == 2 then
-    certdata = hashes.sha512(certdata);
-  elseif match ~= 0 then
+	if match == 1 then
+		certdata = hashes.sha256(certdata);
+	elseif match == 2 then
+		certdata = hashes.sha512(certdata);
+	elseif match ~= 0 then
 		return nil, "match";
-  end
+	end
 	return tohex(certdata);
 end
 
