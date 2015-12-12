@@ -89,7 +89,7 @@ local port = 443;
 if name:find("@") then
 	name, target = name:match("^(.-)@(.*)$");
 	if target:find(":") then
-		target, port = name:match("^(.-):(.*)$");
+		target, port = target:match("^(.-):(.*)$");
 	end
 end
 local sock = socket.connect(target, port);
