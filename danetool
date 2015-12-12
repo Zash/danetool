@@ -131,10 +131,10 @@ for i, arg in ipairs(arg) do
 	if starttls then starttls = get_startts[starttls]; end
 	if starttls then starttls = starttls(name, target); end
 	if starttls then
-		io.stderr:write("Sending: ", starttls,  "\n\n");
+		-- io.stderr:write("Sending: ", starttls,  "\n\n");
 		sock:send(starttls);
 		sock:settimeout(1);
-		print(sock:receive("*a")); -- discard until asked to proceed with TLS
+		-- print(sock:receive("*a")); -- discard until asked to proceed with TLS
 		sock:settimeout(0);
 	end
 end
