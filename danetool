@@ -150,7 +150,7 @@ print(cert:pem())
 
 local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
-print("TLSA respones is "..(reply.bogus or (reply.secure and "Secure" or "Insecure")));
+print("TLSA response is "..(reply.bogus or (reply.secure and "Secure" or "Insecure")));
 prin();
 for i = 1, reply.n do
 	local tlsa = parse_TLSA(reply[i]);
