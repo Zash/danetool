@@ -4,6 +4,16 @@ local socket = require "socket";
 local ssl = require "ssl";
 local unbound = require "lunbound";
 
+local crypto = require "luacrypto";
+
+local hashes = {};
+function hashes.sha256(data, hex)
+	return crypo.digest("sha256", data, not hex);
+end
+function hashes.sha512(data, hex)
+	return crypo.digest("sha512", data, not hex);
+end
+
 local function tohex(s)
 	return s:gsub(".", function (c)
 		return ("%02x"):format(c:byte());
@@ -142,26 +152,10 @@ local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
 print(reply.bogus or (reply.secure and "Secure" or "Insecure"));
 for i = 1, reply.n do
-	local r = reply[i];
-	local select, match, certdata = r.select, r.match;
-	print(parse_TLSA(r))
+	local tlsa = rparse_TLSA(reply[i]);
+	print(tlsa)
 	if use == 1 or use == 3 then
-		if select == 0 then
-			certdata = pem2der(cert:pem());
-		elseif select == 1 and cert.pubkey then
-			certdata = pem2der(cert:pubkey());
-		else
-			print("unsupported selector");
-		end
-		if match == 1 then
-			certdata = hashes.sha256(certdata);
-		elseif match == 2 then
-			certdata = hashes.sha512(certdata);
-		elseif match ~= 0 then
-			print("unsupported match");
-		end
-
-
+		print(one_dane_check(tlsa, cert));
 	else
 		print("TODO CA-based usage");
 	end
