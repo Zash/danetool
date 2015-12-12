@@ -4,6 +4,64 @@ local socket = require "socket";
 local ssl = require "ssl";
 local unbound = require "lunbound";
 
+local function tohex(s)
+	return s:gsub(".", function (c)
+		return ("%02x"):format(c:byte());
+	end);
+end
+
+-- from prosody util.x509
+local pat = "%-%-%-%-%-BEGIN ([A-Z ]+)%-%-%-%-%-\r?\n"..     
+	"([0-9A-Za-z+/=\r\n]*)\r?\n%-%-%-%-%-END %1%-%-%-%-%-";      
+
+local function pem2der(pem)                                  
+	local typ, data = pem:match(pat);                          
+	if typ and data then                                       
+		return base64.decode(data), typ;                         
+	end                                                        
+end                                                          
+
+local tlsa_mt = {};
+
+-- from luaunbound util.dns
+local function parse_TLSA(packet)                    
+  local use, select, match = packet:byte(1,3);
+  return setmetatable({                          
+    use = use;                                   
+    select = select;                             
+    match = match;                               
+    data = packet:sub(4);                     
+  }, tlsa_mt);                                   
+end                                              
+
+-- Acronyms from RFC 7218 
+local tlsa_usages = {     
+  [0] = "PKIX-CA",        
+  [1] = "PKIX-EE",        
+  [2] = "DANE-TA",        
+  [3] = "DANE-EE",        
+  [255] = "PrivCert",     
+};                        
+local tlsa_selectors = {  
+  [0] = "Cert",           
+  [1] = "SPKI",           
+  [255] = "PrivSel",      
+};                        
+local tlsa_match_types = {
+  [0] = "Full",           
+  [1] = "SHA2-256",       
+  [2] = "SHA2-512",       
+  [255] = "PrivMatch",    
+};                        
+
+function tlsa_mt:__tostring()
+	return ("%s %s %s %s"):format(
+		tlsa_usages[self.use] or self.use,
+		tlsa_selectors[self.select] or self.select,
+		tlsa_match_types[self.match] or self.match,
+		tohex(self.data));
+end
+
 local starttls_blobs = {
 	xmpp = [[<stream:stream xmlns:stream='http://etherx.jabber.org/streams' from='$from' version='1.0' xmlns='jabber:$type'><starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>]];
 }
@@ -41,7 +99,9 @@ for i, arg in ipairs(arg) do
 	if starttls then starttls = starttls(name, target); end
 	if starttls then
 		sock:send(starttls);
-		-- Now what?
+		sock:settimeout(1);
+		sock:read("*a");
+		sock:settimeout(0);
 	end
 end
 sock = ssl.wrap(sock, {
@@ -50,5 +110,13 @@ sock = ssl.wrap(sock, {
 });
 repeat until sock:dohandshake();
 
+
 local cert = sock:getpeercertificate();
 print(cert:pem())
+
+local resolver = unbound.new();
+local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
+print(reply.bogus or (reply.secure and "Secure" or "Insecure"));
+for i = 1, reply.n do
+	print(parse_TLSA(reply[i]))
+end
