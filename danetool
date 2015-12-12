@@ -22,48 +22,48 @@ local function tohex(s)
 end
 
 -- from prosody util.x509
-local pat = "%-%-%-%-%-BEGIN ([A-Z ]+)%-%-%-%-%-\r?\n"..     
-	"([0-9A-Za-z+/=\r\n]*)\r?\n%-%-%-%-%-END %1%-%-%-%-%-";      
+local pat = "%-%-%-%-%-BEGIN ([A-Z ]+)%-%-%-%-%-\r?\n"..
+	"([0-9A-Za-z+/=\r\n]*)\r?\n%-%-%-%-%-END %1%-%-%-%-%-";
 
-local function pem2der(pem)                                  
-	local typ, data = pem:match(pat);                          
-	if typ and data then                                       
-		return mime.unb64(data), typ;                         
-	end                                                        
-end                                                          
+local function pem2der(pem)
+	local typ, data = pem:match(pat);
+	if typ and data then
+		return mime.unb64(data), typ;
+	end
+end
 
 local tlsa_mt = {};
 
 -- from luaunbound util.dns
-local function parse_TLSA(packet)                    
+local function parse_TLSA(packet)
   local use, select, match = packet:byte(1,3);
-  return setmetatable({                          
-    use = use;                                   
-    select = select;                             
-    match = match;                               
-    data = packet:sub(4);                     
-  }, tlsa_mt);                                   
-end                                              
+  return setmetatable({
+    use = use;
+    select = select;
+    match = match;
+    data = packet:sub(4);
+  }, tlsa_mt);
+end
 
--- Acronyms from RFC 7218 
-local tlsa_usages = {     
-  [0] = "PKIX-CA",        
-  [1] = "PKIX-EE",        
-  [2] = "DANE-TA",        
-  [3] = "DANE-EE",        
-  [255] = "PrivCert",     
-};                        
-local tlsa_selectors = {  
-  [0] = "Cert",           
-  [1] = "SPKI",           
-  [255] = "PrivSel",      
-};                        
+-- Acronyms from RFC 7218
+local tlsa_usages = {
+  [0] = "PKIX-CA",
+  [1] = "PKIX-EE",
+  [2] = "DANE-TA",
+  [3] = "DANE-EE",
+  [255] = "PrivCert",
+};
+local tlsa_selectors = {
+  [0] = "Cert",
+  [1] = "SPKI",
+  [255] = "PrivSel",
+};
 local tlsa_match_types = {
-  [0] = "Full",           
-  [1] = "SHA2-256",       
-  [2] = "SHA2-512",       
-  [255] = "PrivMatch",    
-};                        
+  [0] = "Full",
+  [1] = "SHA2-256",
+  [2] = "SHA2-512",
+  [255] = "PrivMatch",
+};
 
 function tlsa_mt:__tostring()
 	return ("%s %s %s %s"):format(
@@ -141,7 +141,7 @@ local get_startts = {
 local name = table.remove(arg);
 if not name then
 	print(arg[0].." [--starttls=proto] example.com[@service.example.net[:port]]");
-	return 
+	return
 end
 local target = name;
 local port = "443";
@@ -184,7 +184,7 @@ print(cert:pem())
 
 local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
-	
+
 if reply.nxdomain then
 	print("Query for ".. reply.qname .. " returned NXDOMAIN");
 elseif reply.n == 0 then
