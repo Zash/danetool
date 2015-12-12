@@ -47,3 +47,4 @@ end
 sock = ssl.wrap(sock); -- TODO 
 repeat until sock:dohandshake();
 
+print(sock:getpercertificate():pem())
