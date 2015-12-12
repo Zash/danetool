@@ -124,6 +124,7 @@ if name:find("@") then
 	name, target = name:match("^(.-)@(.*)$");
 	if target:find(":") then
 		target, port = target:match("^(.-):(.*)$");
+		name = name:match("^[^:]+")
 	end
 end
 local sock = socket.connect(target, port);
