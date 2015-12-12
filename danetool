@@ -100,7 +100,7 @@ for i, arg in ipairs(arg) do
 	if starttls then
 		sock:send(starttls);
 		sock:settimeout(1);
-		sock:read("*a"); -- discard until asked to proceed with TLS
+		sock:recive("*a"); -- discard until asked to proceed with TLS
 		sock:settimeout(0);
 	end
 end
