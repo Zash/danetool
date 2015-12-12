@@ -134,7 +134,7 @@ for i, arg in ipairs(arg) do
 		-- io.stderr:write("Sending: ", starttls,  "\n\n");
 		sock:send(starttls);
 		sock:settimeout(1);
-		-- print(sock:receive("*a")); -- discard until asked to proceed with TLS
+		sock:receive("*a"); -- discard until asked to proceed with TLS
 		sock:settimeout(0);
 	end
 end
