@@ -137,14 +137,14 @@ for i, arg in ipairs(arg) do
 		sock:send(starttls);
 		sock:settimeout(1);
 		sock:receive("*a"); -- discard until asked to proceed with TLS
-		sock:settimeout(0);
 	end
 end
+sock:settimeout(60);
 sock = ssl.wrap(sock, {
 	mode = "client",
 	protocol = "tlsv1_2",
 });
-repeat until sock:dohandshake();
+assert(sock:dohandshake());
 
 print(string.format("Connecting to %s on %s port %d", name, target, port))
 
