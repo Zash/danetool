@@ -62,8 +62,31 @@ function tlsa_mt:__tostring()
 		tohex(self.data));
 end
 
+-- from mod_s2s_auth_dane
+local function one_dane_check(tlsa, cert)
+  local select, match, certdata = tlsa.select, tlsa.match;
+
+  if select == 0 then
+    certdata = pem2der(cert:pem());
+  elseif select == 1 and cert.pubkey then
+    certdata = pem2der(cert:pubkey());
+  else
+    return nil, "select";
+  end
+
+  if match == 1 then
+    certdata = hashes.sha256(certdata);
+  elseif match == 2 then
+    certdata = hashes.sha512(certdata);
+  elseif match ~= 0 then
+		return nil, "match";
+  end
+  return certdata == tlsa.data;
+end
+
+
 local starttls_blobs = {
-	xmpp = [[<stream:stream xmlns:stream='http://etherx.jabber.org/streams' from='$from' version='1.0' xmlns='jabber:$type'><starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>]];
+	xmpp = [[<stream:stream xmlns:stream='http://etherx.jabber.org/streams' to='$to' from='$from' version='1.0' xmlns='jabber:$type'><starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>]];
 }
 local get_startts = {
 	["xmpp-client"] = function (name)
@@ -119,5 +142,28 @@ local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
 print(reply.bogus or (reply.secure and "Secure" or "Insecure"));
 for i = 1, reply.n do
-	print(parse_TLSA(reply[i]))
+	local r = reply[i];
+	local select, match, certdata = r.select, r.match;
+	print(parse_TLSA(r))
+	if use == 1 or use == 3 then
+		if select == 0 then
+			certdata = pem2der(cert:pem());
+		elseif select == 1 and cert.pubkey then
+			certdata = pem2der(cert:pubkey());
+		else
+			print("unsupported selector");
+		end
+		if match == 1 then
+			certdata = hashes.sha256(certdata);
+		elseif match == 2 then
+			certdata = hashes.sha512(certdata);
+		elseif match ~= 0 then
+			print("unsupported match");
+		end
+
+
+	else
+		print("TODO CA-based usage");
+	end
+	print()
 end
