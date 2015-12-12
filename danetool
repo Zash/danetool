@@ -9,10 +9,10 @@ local crypto = require "crypto";
 
 local hashes = {};
 function hashes.sha256(data, hex)
-	return crypo.digest("sha256", data, not hex);
+	return crypto.digest("sha256", data, not hex);
 end
 function hashes.sha512(data, hex)
-	return crypo.digest("sha512", data, not hex);
+	return crypto.digest("sha512", data, not hex);
 end
 
 local function tohex(s)
