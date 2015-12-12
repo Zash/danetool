@@ -95,6 +95,25 @@ local function one_dane_check(tlsa, cert)
   return certdata == tlsa.data;
 end
 
+local function cert2tlsa(cert, select, match)
+	local certdata;
+  if select == 0 then
+    certdata = pem2der(cert:pem());
+  elseif select == 1 and cert.pubkey then
+    certdata = pem2der(cert:pubkey());
+  else
+    return nil, "select";
+  end
+
+  if match == 1 then
+    certdata = hashes.sha256(certdata);
+  elseif match == 2 then
+    certdata = hashes.sha512(certdata);
+  elseif match ~= 0 then
+		return nil, "match";
+  end
+	return tohex(certdata);
+end
 
 local starttls_blobs = {
 	xmpp = [[<stream:stream xmlns:stream='http://etherx.jabber.org/streams' to='$to' from='$from' version='1.0' xmlns='jabber:$type'><starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>]];
@@ -110,6 +129,12 @@ local get_startts = {
 			type = "server", from = "example.com", to = name;
 		});
 	end;
+	smtp = function ()
+		return "STARTTLS\r\n";
+	end;
+	imap = function ()
+		return "1 STARTTLS\n";
+	end;
 	-- TODO email etc
 }
 
@@ -119,16 +144,21 @@ if not name then
 	return 
 end
 local target = name;
-local port = 443;
+local port = "443";
 if name:find("@") then
-	name, target = name:match("^(.-)@(.*)$");
-	if target:find(":") then
-		target, port = target:match("^(.-):(.*)$");
-		name = name:match("^[^:]+")
+	if name:find(":") then
+		name, target, port = name:match("^(.-)@(.-):(.*)$");
+	else
+		name, target = name:match("^(.-)@(.*)$");
 	end
+elseif name:find(":") then
+	name, port = name:match("^(.-):(.*)$");
+	target = name;
 end
-local sock = socket.connect(target, port);
-for i, arg in ipairs(arg) do
+
+io.stderr:write("Connecting to ", target, " on port ", port, "\n");
+local sock = assert(socket.connect(target, port));
+for _, arg in ipairs(arg) do
 	local starttls = arg:match("^%-%-starttls=(.*)");
 	if starttls then starttls = get_startts[starttls]; end
 	if starttls then starttls = starttls(name, target); end
@@ -144,16 +174,32 @@ sock = ssl.wrap(sock, {
 	mode = "client",
 	protocol = "tlsv1_2",
 });
+if sock.sni then
+	sock:sni(name);
+end
 assert(sock:dohandshake());
-
-print(string.format("Connecting to %s on %s port %d", name, target, port))
 
 local cert = sock:getpeercertificate();
 print(cert:pem())
 
 local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
-print("TLSA response is "..(reply.bogus or (reply.secure and "Secure" or "Insecure")));
+	
+if reply.nxdomain then
+	print("Query for ".. reply.qname .. " returned NXDOMAIN");
+elseif reply.n == 0 then
+	print("Query for ".. reply.qname .. " returned an empty response");
+else
+	print("Got " .. reply.n .. " TLSA records");
+end
+if reply.bogus then
+	print("Reply was bogus:");
+	print(reply.bogus);
+elseif not reply.secure then
+	print("Reply is insecure");
+else
+	print("Reply is secure");
+end
 print();
 for i = 1, reply.n do
 	local tlsa = parse_TLSA(reply[i]);
@@ -164,4 +210,17 @@ for i = 1, reply.n do
 		print("TODO CA-based usage");
 	end
 	print()
+end
+
+for _, arg in ipairs(arg) do
+	local use, sel, match = arg:match("^%-%-gen%-tlsa=(%d)-(%d)%-(%d)$");
+	use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
+	if use == 1 or use == 3 then
+		print(tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
+		print(use .. " " .. sel .. " " .. match .. " "
+		.. cert2tlsa(cert, sel, match));
+		print();
+		break;
+	end
+	print();
 end
