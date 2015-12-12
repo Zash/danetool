@@ -67,12 +67,12 @@ local starttls_blobs = {
 }
 local get_startts = {
 	["xmpp-client"] = function (name)
-		return starttls_blobs.xmpp:gsub("$%w+", {
+		return starttls_blobs.xmpp:gsub("$(%w+)", {
 			type = "client", from = "", to = name;
 		});
 	end;
 	["xmpp-server"] = function (name)
-		return starttls_blobs.xmpp:gsub("$%w+", {
+		return starttls_blobs.xmpp:gsub("$(%w+)", {
 			type = "server", from = "example.com", to = name;
 		});
 	end;
