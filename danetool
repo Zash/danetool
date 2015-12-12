@@ -1,0 +1,49 @@
+#!/usr/bin/env lua5.1
+
+local socket = require "socket";
+local ssl = require "ssl";
+local unbound = require "lunbound";
+
+local starttls_blobs = {
+	xmpp = [[<stream:stream xmlns:stream='http://etherx.jabber.org/streams' from='$from' version='1.0' xmlns='jabber:$type'><starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>]];
+}
+local get_startts = {
+	["xmpp-client"] = function (name)
+		return starttls_blobs.xmpp:gsub("$%w+", {
+			type = "client", from = "", to = name;
+		});
+	end
+	["xmpp-server"] = function (name)
+		return starttls_blobs.xmpp:gsub("$%w+", {
+			type = "server", from = "example.com", to = name;
+		});
+	end;
+	-- TODO email etc
+}
+
+local name = table.remove(arg);
+if not name then
+	print(arg[0].." [--starttls=proto] example.com[@service.example.net[:port]]");
+	return 
+end
+local target = name;
+local port = 443;
+if name:find("@") then
+	name, target = name:match("^(.-)@(.*)$");
+	if target:find(":") then
+		target, port = name:match("^(.-):(.*)$");
+	end
+end
+local sock = socket.connect(target, port);
+for i, arg in ipairs(arg) do
+	local starttls = arg:match("^%-%-starttls=(.*)");
+	if starttls then starttls = get_startts[starttls]; end
+	if starttls then starttls = starttls(name, target); end
+	if starttls then
+		sock:send(starttls);
+		-- Now what?
+	end
+end
+sock = ssl.wrap(sock); -- TODO 
+repeat until sock:dohandshake();
+
