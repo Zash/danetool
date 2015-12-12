@@ -1,6 +1,7 @@
 #!/usr/bin/env lua5.1
 
 local socket = require "socket";
+local mime = require "mime";
 local ssl = require "ssl";
 local unbound = require "lunbound";
 
@@ -27,7 +28,7 @@ local pat = "%-%-%-%-%-BEGIN ([A-Z ]+)%-%-%-%-%-\r?\n"..
 local function pem2der(pem)                                  
 	local typ, data = pem:match(pat);                          
 	if typ and data then                                       
-		return base64.decode(data), typ;                         
+		return mime.unb64(data), typ;                         
 	end                                                        
 end                                                          
 
