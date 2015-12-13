@@ -94,6 +94,10 @@ local tlsa_match_types = {
 	[2] = "SHA2-512",
 	[255] = "PrivMatch",
 };
+local mt = { __index = function (_, k) return k end };
+setmetatable(tlsa_usages, mt);
+setmetatable(tlsa_selectors, mt);
+setmetatable(tlsa_match_types, mt);
 
 function tlsa_mt:__tostring()
 	return ("%s %s %s %s"):format(
