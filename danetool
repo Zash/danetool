@@ -246,7 +246,12 @@ end
 assert(sock:dohandshake());
 
 local cert = sock:getpeercertificate();
-print(cert:pem())
+for _, arg in ipairs(arg) do
+	if arg == "--pem" then
+		print(cert:pem());
+		break
+	end
+end
 
 local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));

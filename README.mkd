@@ -15,7 +15,6 @@ to a TLSA record.
 
     danetool --starttls=smtp mail.example.com:25
 
-
 ## Grab cert and use SNI
 
     danetool myservice.example@hosting.example.net
@@ -47,3 +46,7 @@ Values (`--starttls=???`) are:
 ### `--gen-tlsa`
 
 Takes a tripplet of numeric Usage, Selector and Match parameters separated by hypen.
+
+### `--pem`
+
+Dumps the certificate in PEM format.
