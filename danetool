@@ -18,6 +18,22 @@ local function get_hashes()
 	package.cpath = package.cpath .. ";/usr/lib/prosody/?.so"
 	local have_hashes, hashes = pcall(require, "util.hashes");
 	if have_hashes then return hashes end
+	-- luaossl then?
+	local have_ossl, ossl_hash = pcall(require, "openssl.digest");
+	if have_ossl then
+		local hashes = {};
+		function hashes.sha256(data, hex)
+			local hash = ossl_hash.new("sha256"):final(data);
+			if hex then return tohex(hash); end
+			return hash;
+		end
+		function hashes.sha512(data)
+			local hash = ossl_hash.new("sha512"):final(data);
+			if hex then return tohex(hash); end
+			return hash;
+		end
+		return hashes;
+	end
 	-- No? But LuaCrypto?
 	local have_crypto, crypto = pcall(require, "crypto");
 	if not hashes and have_crypto then
@@ -254,7 +270,7 @@ for i = 1, reply.n do
 		local is_match, err = one_dane_check(tlsa, cert);
 		if is_match == nil then
 			print("Unsupported "..err);
-			print("Install Prosody or luacrypto");
+			print("Install one of Prosody, luaossl or luacrypto");
 		else
 			print(is_match and "Matches!" or "No match");
 		end
@@ -272,7 +288,7 @@ for _, arg in ipairs(arg) do
 		if not hexdata then
 			print("Can't generate TLSA record :(");
 			print("Unsupported "..err);
-			print("Install Prosody or luacrypto");
+			print("Install one of Prosody, luaossl or luacrypto");
 			break
 		end
 		print("Generating TLSA record:");
