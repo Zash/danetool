@@ -206,7 +206,7 @@ local get_startts = {
 
 local name = table.remove(arg);
 if not name then
-	print(arg[0].." [--starttls=proto] example.com[@service.example.net[:port]]");
+	print(arg[0]:match("[^/\\]*$").." [--starttls=proto] example.com[@service.example.net[:port]]");
 	return
 end
 local target = name;
