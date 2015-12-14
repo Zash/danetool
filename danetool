@@ -26,7 +26,6 @@ end
 -- Try to find a library with SHA2
 local function get_hashes()
 	-- Prosody installed? Use util.hashes
-	local old_cpath = package.cpath;
 	package.cpath = package.cpath .. ";/usr/lib/prosody/?.so"
 	local have_hashes, hashes = pcall(require, "util.hashes");
 	if have_hashes then return hashes end
