@@ -300,6 +300,7 @@ else
 	info("Reply is secure");
 end
 
+local match_found = false;
 for i = 1, reply.n do
 	local tlsa = parse_TLSA(reply[i]);
 	print();
@@ -314,6 +315,7 @@ for i = 1, reply.n do
 				info("Try upgrading LuaSec to 0.6");
 			end
 		elseif is_match then
+			match_found = true;
 			print("Matches!");
 		else
 			info("Does not match, expected:");
@@ -350,3 +352,5 @@ for _, arg in ipairs(arg) do
 		erro("Generating %s is not supported", tlsa_usages[use]);
 	end
 end
+
+os.exit(match_found and 0 or 1);
