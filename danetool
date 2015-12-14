@@ -313,8 +313,12 @@ for i = 1, reply.n do
 			elseif tlsa.select == 1 and not cert.pubkey then
 				info("Try upgrading LuaSec to 0.6");
 			end
+		elseif is_match then
+			print("Matches!");
 		else
-			print(is_match and "Matches!" or "No match");
+			info("Does not match, expected:");
+			info(tlsa.use .. " " .. tlsa.select .. " " .. tlsa.match .. " "
+			.. cert2tlsa(cert, tlsa.select, tlsa.match));
 		end
 	else
 		warn("Validating %s is not supported", tlsa_usages[tlsa.use]);
