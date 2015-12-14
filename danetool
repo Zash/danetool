@@ -116,7 +116,7 @@ local function one_dane_check(tlsa, cert)
 	elseif select == 1 and cert.pubkey then
 		certdata = pem2der(cert:pubkey());
 	else
-		return nil, "select";
+		return nil, "selector " .. tlsa_selectors[select];
 	end
 
 	if match == 1 then
@@ -124,7 +124,7 @@ local function one_dane_check(tlsa, cert)
 	elseif match == 2 then
 		certdata = hashes.sha512(certdata);
 	elseif match ~= 0 then
-		return nil, "match";
+		return nil, "match type " .. tlsa_match_types[match];
 	end
 	return certdata == tlsa.data;
 end
@@ -136,7 +136,7 @@ local function cert2tlsa(cert, select, match)
 	elseif select == 1 and cert.pubkey then
 		certdata = pem2der(cert:pubkey());
 	else
-		return nil, "select";
+		return nil, "selector " .. tlsa_selectors[select];
 	end
 
 	if match == 1 then
@@ -144,7 +144,7 @@ local function cert2tlsa(cert, select, match)
 	elseif match == 2 then
 		certdata = hashes.sha512(certdata);
 	elseif match ~= 0 then
-		return nil, "match";
+		return nil, "match type " .. tlsa_match_types[match];
 	end
 	return tohex(certdata);
 end
@@ -279,7 +279,11 @@ for i = 1, reply.n do
 		local is_match, err = one_dane_check(tlsa, cert);
 		if is_match == nil then
 			print("Unsupported "..err);
-			print("Install one of Prosody, luaossl or luacrypto");
+			if not hashes then
+				print("Try installing one of Prosody, luaossl or luacrypto");
+			elseif sel == 1 and not cert.pubkey then
+				print("Try upgrading LuaSec");
+			end
 		else
 			print(is_match and "Matches!" or "No match");
 		end
@@ -297,7 +301,11 @@ for _, arg in ipairs(arg) do
 		if not hexdata then
 			print("Can't generate TLSA record :(");
 			print("Unsupported "..err);
-			print("Install one of Prosody, luaossl or luacrypto");
+			if not hashes then
+				print("Try installing one of Prosody, luaossl or luacrypto");
+			elseif sel == 1 and not cert.pubkey then
+				print("Try upgrading LuaSec");
+			end
 			break
 		end
 		print("Generating TLSA record:");
