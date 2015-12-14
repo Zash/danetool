@@ -21,7 +21,7 @@ local function get_hashes()
 	-- luaossl then?
 	local have_ossl, ossl_hash = pcall(require, "openssl.digest");
 	if have_ossl then
-		local hashes = {};
+		hashes = {};
 		function hashes.sha256(data, hex)
 			local hash = ossl_hash.new("sha256"):final(data);
 			if hex then return tohex(hash); end
@@ -37,7 +37,7 @@ local function get_hashes()
 	-- No? But LuaCrypto?
 	local have_crypto, crypto = pcall(require, "crypto");
 	if not hashes and have_crypto then
-		local hashes = {};
+		hashes = {};
 		function hashes.sha256(data, hex)
 			return crypto.digest("sha256", data, not hex);
 		end
