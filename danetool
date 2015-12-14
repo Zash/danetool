@@ -332,7 +332,7 @@ for i = 1, reply.n do
 			info("To match the certificate, the record should look like:");
 			info(tlsa_mt.__tostring{
 				select = tlsa.select, use = tlsa.use, match = tlsa.match,
-				data_hex = cert2tlsa(cert, tlsa.select, tlsa.match)
+				data_hex = assert(cert2tlsa(cert, tlsa.select, tlsa.match))
 			});
 		end
 	else
@@ -342,30 +342,32 @@ end
 
 for _, arg in ipairs(arg) do
 	local use, sel, match = arg:match("^%-%-gen%-tlsa=(%d)-(%d)%-(%d)$");
-	use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
-	if use == 1 or use == 3 then
-		print();
-		local hexdata, err = cert2tlsa(cert, sel, match);
-		if not hexdata then
-			erro("Can't generate TLSA record :(");
-			erro("Unsupported "..err);
-			if not hashes then
-				info("Try installing one of Prosody, luaossl or luacrypto");
-			elseif sel == 1 and not cert.pubkey then
-				info("Try upgrading LuaSec to 0.6");
+	if use then
+		use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
+		if use == 1 or use == 3 then
+			print();
+			local hexdata, err = cert2tlsa(cert, sel, match);
+			if not hexdata then
+				erro("Can't generate TLSA record :(");
+				erro("Unsupported "..err);
+				if not hashes then
+					info("Try installing one of Prosody, luaossl or luacrypto");
+				elseif sel == 1 and not cert.pubkey then
+					info("Try upgrading LuaSec to 0.6");
+				end
+				break
 			end
-			break
+			info("Generating TLSA record:");
+			info("%s %s %s", tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
+			print(tlsa_mt.__tostring{
+				select = sel, use = use, match = match,
+				data_hex = assert(cert2tlsa(cert, sel, match))
+			});
+			break;
+		else
+			erro("Generating %s is not supported", tlsa_usages[use]);
 		end
-		info("Generating TLSA record:");
-		info("%s %s %s", tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
-		print(tlsa_mt.__tostring{
-			select = sel, use = use, match = match,
-			data_hex = cert2tlsa(cert, sel, match)
-		});
-		break;
-	else
-		erro("Generating %s is not supported", tlsa_usages[use]);
 	end
 end
 
-os.exit(match_found and 0 or 1);
+	os.exit(match_found and 0 or 1);
