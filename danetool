@@ -112,11 +112,11 @@ setmetatable(tlsa_selectors, mt);
 setmetatable(tlsa_match_types, mt);
 
 function tlsa_mt:__tostring()
-	return ("%s %s %s %s"):format(
-		tlsa_usages[self.use] or self.use,
-		tlsa_selectors[self.select] or self.select,
-		tlsa_match_types[self.match] or self.match,
-		tohex(self.data));
+	return ("%d %d %d %s"):format(
+		self.use or self.use,
+		self.select or self.select,
+		self.match or self.match,
+		self.data_hex or tohex(self.data));
 end
 
 -- from mod_s2s_auth_dane
