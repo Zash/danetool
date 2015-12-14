@@ -27,7 +27,7 @@ local function get_hashes()
 			if hex then return tohex(hash); end
 			return hash;
 		end
-		function hashes.sha512(data)
+		function hashes.sha512(data, hex)
 			local hash = ossl_hash.new("sha512"):final(data);
 			if hex then return tohex(hash); end
 			return hash;
