@@ -348,7 +348,7 @@ for _, arg in ipairs(arg) do
 			if not hashes then
 				info("Try installing one of Prosody, luaossl or luacrypto");
 			elseif sel == 1 and not cert.pubkey then
-				info("Try upgrading LuaSec");
+				info("Try upgrading LuaSec to 0.6");
 			end
 			break
 		end
