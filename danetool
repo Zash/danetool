@@ -322,10 +322,10 @@ for i = 1, reply.n do
 				tlsa_selectors[tlsa.select], tlsa_match_types[tlsa.match]);
 			print(tlsa)
 		else
-			info("TLSA %s %s %s does not match:", tlsa_usages[tlsa.use],
+			info("TLSA %s %s %s from DNS does not match certificate:", tlsa_usages[tlsa.use],
 				tlsa_selectors[tlsa.select], tlsa_match_types[tlsa.match]);
 			print(tlsa);
-			info("Expected:");
+			info("To match the certificate, the record should look like:");
 			info(tlsa_mt.__tostring{
 				select = tlsa.select, use = tlsa.use, match = tlsa.match,
 				data_hex = cert2tlsa(cert, tlsa.select, tlsa.match)
