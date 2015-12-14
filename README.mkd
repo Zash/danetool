@@ -5,6 +5,16 @@
 This is a tool that grabs a certificate from a service and compares it
 to a TLSA record.
 
+# Dependencies
+
+-   [LuaSocket](http://w3.impa.br/~diego/software/luasocket/)
+-   [LuaSec](https://github.com/brunoos/luasec) \>=0.5, with 0.6 needed for SPKI support
+-   [luaunbound](https://www.zash.se/luaunbound.html)
+-   Hash library, optional, but recommended for SPKI support
+    -   [Lua OpenSSL](http://25thandclement.com/~william/projects/luaossl.html)
+    -   LuaCrypto
+    -   `util.hashes` from [Prosody](https://prosody.im/)
+
 # Usage
 
 ## Just grab some cert from some HTTPS service
