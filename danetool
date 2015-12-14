@@ -234,14 +234,23 @@ info("Connecting to %s on port %d", target, port);
 
 local sock = assert(socket.connect(target, port));
 for _, arg in ipairs(arg) do
-	local starttls = arg:match("^%-%-starttls=(.*)");
-	if starttls then starttls = get_startts[starttls]; end
-	if starttls then starttls = starttls(name, target); end
-	if starttls then
+	local proto = arg:match("^%-%-starttls=(.*)");
+	if proto then
+		local starttls = get_startts[proto];
+		if not starttls then
+			err("No starttls preset '%s'.", proto);
+			info("Available presets are:", proto);
+			for preset in pairs(get_startts) do
+				info("  * %s", preset);
+			end
+			os.exit(1);
+		end
+		starttls = starttls(name, target);
 		-- io.stderr:write("Sending: ", starttls,  "\n\n");
 		sock:send(starttls);
 		sock:settimeout(1);
 		sock:receive("*a"); -- discard until asked to proceed with TLS
+		break
 	end
 end
 sock:settimeout(60);
