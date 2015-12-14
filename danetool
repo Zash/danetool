@@ -9,7 +9,11 @@ local function info(message, ...)
 	io.stderr:write(message:format(...), "\n");
 end
 
-local function err(message, ...)
+local function warn(message, ...)
+	return info("W: "..message, ...);
+end
+
+local function erro(message, ...)
 	return info("E: "..message, ...);
 end
 
@@ -238,7 +242,7 @@ for _, arg in ipairs(arg) do
 	if proto then
 		local starttls = get_startts[proto];
 		if not starttls then
-			err("No starttls preset '%s'.", proto);
+			erro("No starttls preset '%s'.", proto);
 			info("Available presets are:", proto);
 			for preset in pairs(get_startts) do
 				info("  * %s", preset);
@@ -319,8 +323,8 @@ for _, arg in ipairs(arg) do
 		print();
 		local hexdata, err = cert2tlsa(cert, sel, match);
 		if not hexdata then
-			err("Can't generate TLSA record :(");
-			err("Unsupported "..err);
+			erro("Can't generate TLSA record :(");
+			erro("Unsupported "..err);
 			if not hashes then
 				info("Try installing one of Prosody, luaossl or luacrypto");
 			elseif sel == 1 and not cert.pubkey then
@@ -334,6 +338,6 @@ for _, arg in ipairs(arg) do
 		.. cert2tlsa(cert, sel, match));
 		break;
 	else
-		err("Generating %s is not supported", tlsa_usages[use]);
+		erro("Generating %s is not supported", tlsa_usages[use]);
 	end
 end
