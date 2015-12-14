@@ -218,7 +218,12 @@ local get_startts = {
 
 local name = table.remove(arg);
 if not name then
-	info(arg[0]:match("[^/\\]*$").." [--starttls=proto] example.com[@service.example.net[:port]]");
+	info("%s (options) example.com[@service.example.net[:port]]", arg[0]:match("[^/\\]*$"));
+	info("  Options: (all optional)");
+	info("    --starttls=protocol Cleartext TLS negotiation");
+	info("               ( xmpp-client | xmpp-server | smtp | imap )");
+	info("    --gen-tlsa=U-S-M    Generate TLSA records from numeric paramaters");
+	info("    --pem               Output certificate in PEM format");
 	return
 end
 local target = name;
