@@ -354,8 +354,10 @@ for _, arg in ipairs(arg) do
 		end
 		info("Generating TLSA record:");
 		info("%s %s %s", tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
-		print(use .. " " .. sel .. " " .. match .. " "
-		.. cert2tlsa(cert, sel, match));
+		print(tlsa_mt.__tostring{
+			select = sel, use = use, match = match,
+			data_hex = cert2tlsa(cert, sel, match)
+		});
 		break;
 	else
 		erro("Generating %s is not supported", tlsa_usages[use]);
