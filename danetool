@@ -5,6 +5,14 @@ local mime = require "mime";
 local ssl = require "ssl";
 local unbound = require "lunbound";
 
+local function info(message, ...)
+	io.stderr:write(message:format(...), "\n");
+end
+
+local function err(message, ...)
+	return info("E: "..message, ...);
+end
+
 local function tohex(s)
 	return s:gsub(".", function (c)
 		return ("%02x"):format(c:byte());
@@ -206,7 +214,7 @@ local get_startts = {
 
 local name = table.remove(arg);
 if not name then
-	print(arg[0]:match("[^/\\]*$").." [--starttls=proto] example.com[@service.example.net[:port]]");
+	info(arg[0]:match("[^/\\]*$").." [--starttls=proto] example.com[@service.example.net[:port]]");
 	return
 end
 local target = name;
@@ -222,7 +230,8 @@ elseif name:find(":") then
 	target = name;
 end
 
-io.stderr:write("Connecting to ", target, " on port ", port, "\n");
+info("Connecting to %s on port %d", target, port);
+
 local sock = assert(socket.connect(target, port));
 for _, arg in ipairs(arg) do
 	local starttls = arg:match("^%-%-starttls=(.*)");
@@ -257,63 +266,65 @@ local resolver = unbound.new();
 local reply = assert(resolver:resolve(("_%d._tcp.%s."):format(port, target), 52, 1));
 
 if reply.nxdomain then
-	print("Query for ".. reply.qname .. " returned NXDOMAIN");
+	info("Query for %s returned NXDOMAIN", reply.qname);
 elseif reply.n == 0 then
-	print("Query for ".. reply.qname .. " returned an empty response");
+	info("Query for %s returned an empty response", reply.qname);
 else
-	print("Got " .. reply.n .. " TLSA records");
+	info("Query for %s returned %d TLSA record%s", reply.qname, reply.n, reply.n ~= 1 and "s" or "");
 end
+
 if reply.bogus then
-	print("Reply was bogus:");
-	print(reply.bogus);
+	warn("Reply was bogus:");
+	warn(reply.bogus);
 elseif not reply.secure then
-	print("Reply is insecure");
+	info("Reply is insecure");
 else
-	print("Reply is secure");
+	info("Reply is secure");
 end
-print();
+
 for i = 1, reply.n do
 	local tlsa = parse_TLSA(reply[i]);
+	print();
 	print(tlsa)
 	if tlsa.use == 1 or tlsa.use == 3 then
 		local is_match, err = one_dane_check(tlsa, cert);
 		if is_match == nil then
-			print("Unsupported "..err);
+			warn("Unsupported "..err);
 			if not hashes then
-				print("Try installing one of Prosody, luaossl or luacrypto");
-			elseif sel == 1 and not cert.pubkey then
-				print("Try upgrading LuaSec");
+				info("Try installing one of Prosody, luaossl or luacrypto");
+			elseif tlsa.select == 1 and not cert.pubkey then
+				info("Try upgrading LuaSec");
 			end
 		else
 			print(is_match and "Matches!" or "No match");
 		end
 	else
-		print("TODO CA-based usage");
+		warn("Validating %s is not supported", tlsa_usages[tlsa.use]);
 	end
-	print()
 end
 
 for _, arg in ipairs(arg) do
 	local use, sel, match = arg:match("^%-%-gen%-tlsa=(%d)-(%d)%-(%d)$");
 	use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
 	if use == 1 or use == 3 then
+		print();
 		local hexdata, err = cert2tlsa(cert, sel, match);
 		if not hexdata then
-			print("Can't generate TLSA record :(");
-			print("Unsupported "..err);
+			err("Can't generate TLSA record :(");
+			err("Unsupported "..err);
 			if not hashes then
-				print("Try installing one of Prosody, luaossl or luacrypto");
+				info("Try installing one of Prosody, luaossl or luacrypto");
 			elseif sel == 1 and not cert.pubkey then
-				print("Try upgrading LuaSec");
+				info("Try upgrading LuaSec");
 			end
 			break
 		end
-		print("Generating TLSA record:");
-		print(tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
+		info("Generating TLSA record:");
+		info("%s %s %s", tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
 		print(use .. " " .. sel .. " " .. match .. " "
 		.. cert2tlsa(cert, sel, match));
-		print();
 		break;
+	else
+		err("Generating %s is not supported", tlsa_usages[use]);
 	end
-	print();
 end
