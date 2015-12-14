@@ -238,6 +238,10 @@ elseif name:find(":") then
 	name, port = name:match("^(.-):(.*)$");
 	target = name;
 end
+if not tonumber(port) then
+	erro("Invalid port %q", port);
+	os.exit(2);
+end
 
 info("Connecting to %s on port %d", target, port);
 
@@ -252,7 +256,7 @@ for _, arg in ipairs(arg) do
 			for preset in pairs(get_startts) do
 				info("  * %s", preset);
 			end
-			os.exit(1);
+			os.exit(2);
 		end
 		starttls = starttls(name, target);
 		-- io.stderr:write("Sending: ", starttls,  "\n\n");
