@@ -6,32 +6,33 @@ local ssl = require "ssl";
 local unbound = require "lunbound";
 
 local function parseargs(conf, args)
-	if not args[1] then return args end
 	local i = 1;
 	local parsed = {};
 
-	repeat
-		local arg = args[i];
+	while args[i] do
+		local arg = args[i]; i = i + 1;
 		local name, value = arg:match("^%-%-(.-)=(.*)$");
 		if not name then
-			name = arg:match("^%-%-(.*)$");
+			name, value = arg:match("^%-%-(.*)$"), true;
+			if conf[name] then
+				value = args[i];
+				i = i + 1;
+			end
 		end
 		if name then
-			if not value then
-				if conf[name] then
-					value = args[i+1];
-					i = i + 2;
+			if conf[name] == "multiple" then
+				if parsed[name] then
+					table.insert(parsed[name], value);
 				else
-					value = true;
-					i = i + 1;
+					parsed[name] = { value };
 				end
+			else
+				parsed[name] = value;
 			end
-			parsed[name] = value;
 		else
 			table.insert(parsed, arg);
-			i = i + 1;
 		end
-	until args[i] == nil
+	end
 
 	return parsed;
 end
