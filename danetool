@@ -247,6 +247,9 @@ local get_startts = {
 	-- TODO email etc
 }
 
+local argument_error = 2;
+local connection_error = 3;
+
 local args = parseargs({ starttls = true, ["gen-tlsa"] = true }, arg);
 if #args ~= 1 then
 	info("%s (options) example.com[@service.example.net[:port]]", arg[0]:match("[^/\\]*$"));
@@ -255,7 +258,7 @@ if #args ~= 1 then
 	info("               ( xmpp-client | xmpp-server | smtp | imap )");
 	info("    --gen-tlsa=U-S-M    Generate TLSA records from numeric paramaters");
 	info("    --pem               Output certificate in PEM format");
-	return
+	return os.exit(argument_error);
 end
 
 local name = args[1];
@@ -273,12 +276,16 @@ elseif name:find(":") then
 end
 if not tonumber(port) then
 	erro("Invalid port %q", port);
-	os.exit(2);
+	os.exit(argument_error);
 end
 
 info("Connecting to %s on port %d", target, port);
 
-local sock = assert(socket.connect(target, port));
+local sock, conn_err = socket.connect(target, port);
+if not sock then
+	erro("Error connecting: %s", conn_err or "unknown error");
+	os.exit(connection_error);
+end
 
 if args.starttls then
 	local starttls = get_startts[args.starttls];
@@ -288,7 +295,7 @@ if args.starttls then
 		for preset in pairs(get_startts) do
 			info("  * %s", preset);
 		end
-		os.exit(2);
+		os.exit(argument_error);
 	end
 	starttls = starttls(name, target);
 	-- io.stderr:write("Sending: ", starttls,  "\n\n");
