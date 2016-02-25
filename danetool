@@ -261,19 +261,23 @@ if #args ~= 1 then
 	return os.exit(argument_error);
 end
 
-local name = args[1];
-local target = name;
-local port = "443";
-if name:find("@") then
-	if name:find(":") then
-		name, target, port = name:match("^(.-)@(.-):(.*)$");
-	else
-		name, target = name:match("^(.-)@(.*)$");
+local function parse_target(name)
+	local target = name;
+	local port = "443";
+	if name:find("@") then
+		if name:find(":") then
+			name, target, port = name:match("^(.-)@(.-):(.*)$");
+		else
+			name, target = name:match("^(.-)@(.*)$");
+		end
+	elseif name:find(":") then
+		name, port = name:match("^(.-):(.*)$");
+		target = name;
 	end
-elseif name:find(":") then
-	name, port = name:match("^(.-):(.*)$");
-	target = name;
+	return name, target, port;
 end
+
+local name, target, port = parse_target(args[1]);
 if not tonumber(port) then
 	erro("Invalid port %q", port);
 	os.exit(argument_error);
