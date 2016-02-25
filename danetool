@@ -377,30 +377,32 @@ end
 
 if args["gen-tlsa"] then
 	local use, sel, match = args["gen-tlsa"]:match("^(%d)-(%d)%-(%d)$");
-	if use then
-		use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
-		if use == 1 or use == 3 then
-			print();
-			local hexdata, err = cert2tlsa(cert, sel, match);
-			if not hexdata then
-				erro("Can't generate TLSA record :(");
-				erro("Unsupported "..err);
-				if not hashes then
-					info("Try installing one of Prosody, luaossl or luacrypto");
-				elseif sel == 1 and not cert.pubkey then
-					info("Try upgrading LuaSec to 0.6");
-				end
-			else
-				info("Generating TLSA record:");
-				info("%s %s %s", tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
-				print(tlsa_mt.__tostring{
-					select = sel, use = use, match = match,
-					data_hex = assert(cert2tlsa(cert, sel, match))
-				});
+	if not use then
+		err("Invalid --gen-tlsa argument: %q", args["gen-tlsa"]);
+		os.exit(argument_error);
+	end
+	use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
+	if use == 1 or use == 3 then
+		print();
+		local hexdata, err = cert2tlsa(cert, sel, match);
+		if not hexdata then
+			erro("Can't generate TLSA record :(");
+			erro("Unsupported "..err);
+			if not hashes then
+				info("Try installing one of Prosody, luaossl or luacrypto");
+			elseif sel == 1 and not cert.pubkey then
+				info("Try upgrading LuaSec to 0.6");
 			end
 		else
-			erro("Generating %s is not supported", tlsa_usages[use]);
+			info("Generating TLSA record:");
+			info("%s %s %s", tlsa_usages[use], tlsa_selectors[sel], tlsa_match_types[match]);
+			print(tlsa_mt.__tostring{
+				select = sel, use = use, match = match,
+				data_hex = assert(cert2tlsa(cert, sel, match))
+			});
 		end
+	else
+		erro("Generating %s is not supported", tlsa_usages[use]);
 	end
 end
 
