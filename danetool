@@ -386,7 +386,7 @@ end
 if args["gen-tlsa"] then
 	local use, sel, match = args["gen-tlsa"]:match("^(%d)-(%d)%-(%d)$");
 	if not use then
-		err("Invalid --gen-tlsa argument: %q", args["gen-tlsa"]);
+		erro("Invalid --gen-tlsa argument: %q", args["gen-tlsa"]);
 		os.exit(argument_error);
 	end
 	use, sel, match = tonumber(use), tonumber(sel), tonumber(match);
