@@ -274,6 +274,14 @@ local function parse_target(name)
 		name, port = name:match("^(.-):(.*)$");
 		target = name;
 	end
+	if not tonumber(port) then
+		for service in io.lines("/etc/services") do
+			if service:find("/tcp") and service:match("^%S+") == port then
+				port = service:match("(%d+)/tcp");
+				break;
+			end
+		end
+	end
 	return name, target, port;
 end
 
