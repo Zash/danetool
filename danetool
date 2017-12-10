@@ -302,8 +302,8 @@ end
 if args.starttls then
 	local starttls = get_startts[args.starttls];
 	if not starttls then
-		erro("No starttls preset '%s'.", proto);
-		info("Available presets are:", proto);
+		erro("No starttls preset '%s'.", starttls);
+		info("Available presets are:");
 		for preset in pairs(get_startts) do
 			info("  * %s", preset);
 		end
